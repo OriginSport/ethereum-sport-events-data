@@ -1,10 +1,8 @@
 pragma solidity 0.4.19;
 
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract DataCenter is Ownable {
-  using SafeMath for uint;
 
   struct DataItem {
     bytes32 gameId;
