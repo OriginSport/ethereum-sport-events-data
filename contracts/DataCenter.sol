@@ -7,7 +7,7 @@ contract DataCenter is Ownable {
   struct DataItem {
     bytes32 gameId;
     bytes32 result;
-    bytes32 detailDataHash;
+    string detailDataHash;
   }
 
   mapping (bytes32 => DataItem) dataCenter;
@@ -19,7 +19,7 @@ contract DataCenter is Ownable {
 
   }
 
-  function saveResult(bytes32 gameId, bytes32 result, bytes32 hash) onlyOwner onlyOnce(gameId) public {
+  function saveResult(bytes32 gameId, bytes32 result, string hash) onlyOwner onlyOnce(gameId) public {
     dataCenter[gameId].gameId = gameId;
     dataCenter[gameId].result = result;
     dataCenter[gameId].detailDataHash = hash;
@@ -29,7 +29,7 @@ contract DataCenter is Ownable {
     return dataCenter[gameId].result;
   }
 
-  function getDetailDataHash(bytes32 gameId) view public returns (bytes32) {
+  function getDetailDataHash(bytes32 gameId) view public returns (string) {
     return dataCenter[gameId].detailDataHash;
   }
 }
