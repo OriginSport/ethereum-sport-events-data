@@ -25,7 +25,7 @@ contract('DataCenter', accounts => {
   const gameId = '0012345678'
   const result = '115-109'
   const hash = 'QmY7kQ3GjZzAW6v622qUe9QoMpJECQa63UkV958kHbuViR'
-  const params = [getBytes(gameId), getBytes(result), getBytes(hash)]
+  const params = [getBytes(gameId), getBytes(result), hash]
 
   before(() => {
     return DataCenter.deployed({from: owner})
@@ -38,8 +38,16 @@ contract('DataCenter', accounts => {
     await dataCenter.saveResult(...params)
     const _result = await dataCenter.getResult(getBytes(gameId))
     const _hash = await dataCenter.getDetailDataHash(getBytes(gameId))
-    console.log(result, hash)
-    assert(getStr(_result), result)
-    assert(getStr(_hash), hash)
+    assert.equal(getStr(_result), result)
+    assert.equal(_hash, hash)
+  })
+
+  it('test query a not exist game', async () => {
+    const notExistId = getBytes('not exist game id')
+    const _result = await dataCenter.getResult(notExistId)
+    const _hash = await dataCenter.getDetailDataHash(notExistId)
+    const nullStr = ''
+    assert.equal(getStr(_result), nullStr)
+    assert.equal(_hash, nullStr)
   })
 })
