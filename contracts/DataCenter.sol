@@ -4,13 +4,15 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract DataCenter is Ownable {
 
-  uint public constant CONFIRM_RESULT_BONUS = 0;
+  uint public constant CONFIRM_RESULT_BONUS = 10;
+  uint public constant NEED_CONFIRMATIONS = 12;
 
   struct DataItem {
     bytes32 gameId;
-    bytes32 result;
     string detailDataHash;
-    uint confirmations;
+    uint8 leftPts;
+    uint8 rightPts;
+    uint8 confirmations;
   }
 
   mapping (bytes32 => DataItem) public dataCenter;
@@ -26,7 +28,7 @@ contract DataCenter is Ownable {
   }
 
   modifier confirmationNotEnough (bytes32 gameId) {
-    require(dataCenter[gameId].confirmations < 10);
+    require(dataCenter[gameId].confirmations < NEED_CONFIRMATIONS);
     _;
   }
 
@@ -35,17 +37,18 @@ contract DataCenter is Ownable {
 
   }
 
-  function saveResult(bytes32 gameId, bytes32 result, string hash) onlyOwner onlyOnce(gameId) public {
+  function saveResult(bytes32 gameId, uint8 leftPts, uint8 rightPts, string hash) onlyOwner onlyOnce(gameId) public {
     dataCenter[gameId].gameId = gameId;
-    dataCenter[gameId].result = result;
     dataCenter[gameId].detailDataHash = hash;
+    dataCenter[gameId].leftPts = leftPts;
+    dataCenter[gameId].rightPts = rightPts;
     dataCenter[gameId].confirmations = 0;
   }
 
-  function confirmResult(bytes32 gameId, bytes32 result) gameExist(gameId) confirmationNotEnough(gameId) public {
-    if (dataCenter[gameId].result == result) {
+  function confirmResult(bytes32 gameId, uint leftPts, uint rightPts) gameExist(gameId) confirmationNotEnough(gameId) public {
+    if (dataCenter[gameId].leftPts == leftPts && dataCenter[gameId].rightPts == rightPts) {
       dataCenter[gameId].confirmations += 1;
-      // rewardERC20(msg.sender);
+      //rewardERC20(msg.sender);
     }
   }
 
