@@ -7,11 +7,12 @@ contract DataCenter is Ownable {
   uint public constant CONFIRM_RESULT_BONUS = 10;
   uint public constant NEED_CONFIRMATIONS = 12;
 
+  // NBA all star game pts may greater than 255
   struct DataItem {
     bytes32 gameId;
     string detailDataHash;
-    uint8 leftPts;
-    uint8 rightPts;
+    uint16 leftPts;
+    uint16 rightPts;
     uint8 confirmations;
   }
 
@@ -37,12 +38,16 @@ contract DataCenter is Ownable {
 
   }
 
-  function saveResult(bytes32 gameId, uint8 leftPts, uint8 rightPts, string hash) onlyOwner onlyOnce(gameId) public {
+  function saveResult(bytes32 gameId, uint16 leftPts, uint16 rightPts, string hash) onlyOwner onlyOnce(gameId) public {
     dataCenter[gameId].gameId = gameId;
     dataCenter[gameId].detailDataHash = hash;
     dataCenter[gameId].leftPts = leftPts;
     dataCenter[gameId].rightPts = rightPts;
-    dataCenter[gameId].confirmations = 0;
+    dataCenter[gameId].confirmations = 1;
+  }
+
+  function getResult(bytes32 gameId) view public returns (uint16, uint16, uint8) {
+    return (dataCenter[gameId].leftPts, dataCenter[gameId].rightPts, dataCenter[gameId].confirmations);
   }
 
   function confirmResult(bytes32 gameId, uint leftPts, uint rightPts) gameExist(gameId) confirmationNotEnough(gameId) public {
@@ -56,4 +61,3 @@ contract DataCenter is Ownable {
     addr.transfer(CONFIRM_RESULT_BONUS);
   }
 }
-
