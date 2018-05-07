@@ -22,9 +22,10 @@ contract('DataCenter', accounts => {
 
   let dataCenter
   const gameId = '0012345678'
-  const result = '115-109'
+  const leftPts = 115
+  const rightPts = 109
   const hash = 'QmY7kQ3GjZzAW6v622qUe9QoMpJECQa63UkV958kHbuViR'
-  const params = [getBytes(gameId), getBytes(result), hash]
+  const params = [getBytes(gameId), leftPts, rightPts, hash]
 
   before(() => {
     return DataCenter.deployed({from: owner})
@@ -37,9 +38,17 @@ contract('DataCenter', accounts => {
     await dataCenter.saveResult(...params)
     const item = await dataCenter.dataCenter(getBytes(gameId))
     assert.equal(getStr(item[0]), gameId)
-    assert.equal(getStr(item[1]), result)
-    assert.equal(item[2], hash)
-    assert.equal(item[3].toNumber(), 0)
+    assert.equal(item[1], hash)
+    assert.equal(item[2], leftPts)
+    assert.equal(item[3], rightPts)
+    assert.equal(item[4].toNumber(), 1)
+  })
+
+  it('should return a data item using by bet-center', async () => {
+    const item = await dataCenter.getResult(getBytes(gameId))
+    assert.equal(item[0], leftPts)
+    assert.equal(item[1], rightPts)
+    assert.equal(item[2], 1)
   })
 
   it('can not save result again', async () => {
@@ -50,26 +59,27 @@ contract('DataCenter', accounts => {
     const notExistId = getBytes('not exist game id')
     const item = await dataCenter.dataCenter(getBytes(notExistId))
     assert.equal(getStr(item[0]), '')
-    assert.equal(getStr(item[1]), '')
-    assert.equal(item[2], '')
-    assert.equal(item[3].toNumber(), 0)
+    assert.equal(item[1], '')
+    assert.equal(item[2], 0)
+    assert.equal(item[3], 0)
+    assert.equal(item[4].toNumber(), 0)
   })
 
   it('test user1 to confirm a game result', async () => {
-    await dataCenter.confirmResult(getBytes(gameId), getBytes(result))
+    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts)
     const item = await dataCenter.dataCenter(getBytes(gameId))
-    assert.equal(item[3].toNumber(), 1)
+    assert.equal(item[4].toNumber(), 2)
   })
 
   it('test user2 to confirm a game result', async () => {
-    await dataCenter.confirmResult(getBytes(gameId), getBytes('Wrong Result'))
+    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts+1)
     const item = await dataCenter.dataCenter(getBytes(gameId))
-    assert.equal(item[3].toNumber(), 1)
+    assert.equal(item[4].toNumber(), 2)
   })
 
   it('test user3 to confirm a game result', async () => {
-    await dataCenter.confirmResult(getBytes(gameId), getBytes(result))
+    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts)
     const item = await dataCenter.dataCenter(getBytes(gameId))
-    assert.equal(item[3].toNumber(), 2)
+    assert.equal(item[4].toNumber(), 3)
   })
 })
