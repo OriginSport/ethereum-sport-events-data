@@ -1,9 +1,6 @@
 const { assertRevert } = require('truffle-js-test-helper')
-
-const DataCenter = artifacts.require('./DataCenter.sol')
 const web3 = require('web3')
-// return web3.utils.fromAscii(str)
-// return web3.utils.hexToAscii(bytes32)
+const DataCenter = artifacts.require('./DataCenter.sol')
 
 function getStr(hexStr) {
   return web3.utils.hexToAscii(hexStr).replace(/\u0000/g, '')
