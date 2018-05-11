@@ -21,7 +21,7 @@ contract AddressResolver is Ownable {
 
   /**
    * @dev set a new address(when datacenter contract update)
-   * @param newAddr the new address of datacenter adress
+   * @param newaddr the new address of datacenter adress
    */
   function setAddr(address newaddr) onlyOwner public {
     addr = newaddr;
