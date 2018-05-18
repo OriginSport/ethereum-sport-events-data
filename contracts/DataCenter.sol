@@ -2,9 +2,20 @@ pragma solidity 0.4.19;
 
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
+contract ERC20 {
+  function totalSupply() public constant returns (uint);
+  function balanceOf(address tokenOwner) public constant returns (uint balance);
+  function allowance(address tokenOwner, address spender) public constant returns (uint remaining);
+  function transfer(address to, uint tokens) public returns (bool success);
+  function approve(address spender, uint tokens) public returns (bool success);
+  function transferFrom(address from, address to, uint tokens) public returns (bool success);
+  event Transfer(address indexed from, address indexed to, uint tokens);
+  event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
+}
+
 contract DataCenter is Ownable {
 
-  uint public constant CONFIRM_RESULT_BONUS = 10;
+  uint public constant CONFIRM_RESULT_BONUS = 10 * 10 ** 18;
   uint public constant NEED_CONFIRMATIONS = 6;
 
   // NBA all star game pts may greater than 255
@@ -16,6 +27,7 @@ contract DataCenter is Ownable {
     uint8 confirmations;
   }
 
+  address token;
   mapping (bytes32 => DataItem) public dataCenter;
 
   /**
@@ -46,8 +58,8 @@ contract DataCenter is Ownable {
   }
 
   function () public payable {}
-  function DataCenter() public {
-
+  function DataCenter(address tokenAddr) public {
+    token = tokenAddr;
   }
 
   /**
@@ -82,15 +94,14 @@ contract DataCenter is Ownable {
   function confirmResult(bytes32 gameId, uint leftPts, uint rightPts) gameExist(gameId) confirmationNotEnough(gameId) public {
     if (dataCenter[gameId].leftPts == leftPts && dataCenter[gameId].rightPts == rightPts) {
       dataCenter[gameId].confirmations += 1;
-      //rewardERC20(msg.sender);
+      rewardERC20();
     }
   }
 
   /**
    * @dev distribute reward to participants of auditing game result
-   * @param addr the address to receive rewards
    */
-  function rewardERC20(address addr) internal {
-    addr.transfer(CONFIRM_RESULT_BONUS);
+  function rewardERC20() internal {
+    ERC20(token).transfer(msg.sender, CONFIRM_RESULT_BONUS);
   }
 }
