@@ -16,7 +16,7 @@ contract ERC20 {
 contract DataCenter is Ownable {
 
   uint public constant CONFIRM_RESULT_BONUS = 10 * 10 ** 18;
-  uint public constant NEED_CONFIRMATIONS = 6;
+  uint public constant MAX_CONFIRMATIONS = 6;
 
   // NBA all star game pts may greater than 255
   struct DataItem {
@@ -25,6 +25,7 @@ contract DataCenter is Ownable {
     uint16 leftPts;
     uint16 rightPts;
     uint8 confirmations;
+    mapping (address => bool) confirmAddrs;
   }
 
   address token;
@@ -53,7 +54,7 @@ contract DataCenter is Ownable {
    * @param gameId indicate the unique id of game
    */
   modifier confirmationNotEnough (bytes32 gameId) {
-    require(dataCenter[gameId].confirmations < NEED_CONFIRMATIONS);
+    require(dataCenter[gameId].confirmations < MAX_CONFIRMATIONS);
     _;
   }
 
@@ -75,6 +76,7 @@ contract DataCenter is Ownable {
     dataCenter[gameId].leftPts = leftPts;
     dataCenter[gameId].rightPts = rightPts;
     dataCenter[gameId].confirmations = 1;
+    dataCenter[gameId].confirmAddrs[msg.sender] = true;
   }
 
   /**
@@ -93,9 +95,20 @@ contract DataCenter is Ownable {
    */
   function confirmResult(bytes32 gameId, uint leftPts, uint rightPts) gameExist(gameId) confirmationNotEnough(gameId) public {
     if (dataCenter[gameId].leftPts == leftPts && dataCenter[gameId].rightPts == rightPts) {
+      require(!contains(gameId, msg.sender));
+      dataCenter[gameId].confirmAddrs[msg.sender] = true;
       dataCenter[gameId].confirmations += 1;
-      rewardERC20();
+      // rewardERC20();
     }
+  }
+
+  /**
+   * @dev to check the given address is in the GameItem confirmList
+   * @param gameId indicate the unique id of game
+   * @param addr indicate the address to check
+   */
+  function contains(bytes32 gameId, address addr) view public returns (bool) {
+    return dataCenter[gameId].confirmAddrs[addr];
   }
 
   /**
