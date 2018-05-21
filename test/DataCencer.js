@@ -16,6 +16,7 @@ contract('DataCenter', accounts => {
   var user2 = accounts[2]
   var user3 = accounts[3]
   var user4 = accounts[4]
+  var user5 = accounts[5]
 
   let dataCenter
   const gameId = '0012345678'
@@ -24,8 +25,10 @@ contract('DataCenter', accounts => {
   const hash = 'QmY7kQ3GjZzAW6v622qUe9QoMpJECQa63UkV958kHbuViR'
   const params = [getBytes(gameId), leftPts, rightPts, hash]
 
+  const testTokenAddr = '0xeb9a4b185816c354db92db09cc3b50be60b901b6'
+
   before(() => {
-    return DataCenter.deployed({from: owner})
+    return DataCenter.deployed(testTokenAddr, {from: owner})
     .then(instance => {
       dataCenter = instance
     })
@@ -62,21 +65,38 @@ contract('DataCenter', accounts => {
     assert.equal(item[4].toNumber(), 0)
   })
 
+  it('test contains function', async () => {
+    const isContained = await dataCenter.contains(getBytes(gameId), owner)
+    assert.equal(isContained, true, 'owner save result, should be contained')
+    const isContained2 = await dataCenter.contains(getBytes(gameId), user4)
+    assert.equal(isContained2, false, 'new addr should not be containeed')
+  })
+
   it('test user1 to confirm a game result', async () => {
-    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts)
+    const options = { from: user1 }
+    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts, options)
     const item = await dataCenter.dataCenter(getBytes(gameId))
     assert.equal(item[4].toNumber(), 2)
   })
 
   it('test user2 to confirm a game result', async () => {
-    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts+1)
+    const options = { from: user2 }
+    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts, options)
+ 
     const item = await dataCenter.dataCenter(getBytes(gameId))
-    assert.equal(item[4].toNumber(), 2)
+    assert.equal(item[4].toNumber(), 3)
   })
 
   it('test user3 to confirm a game result', async () => {
-    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts)
+    const options = { from: user3 }
+    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts, options)
+ 
     const item = await dataCenter.dataCenter(getBytes(gameId))
-    assert.equal(item[4].toNumber(), 3)
+    assert.equal(item[4].toNumber(), 4)
+  })
+
+  it('test user3 to confirm a game result again', async () => {
+    const options = { from: user3 }
+    await assertRevert(dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts, options))
   })
 })
