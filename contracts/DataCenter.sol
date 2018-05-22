@@ -93,12 +93,12 @@ contract DataCenter is Ownable {
    * @param leftPts the score or points of left team gained(In football left team means home team, in NBA left team means away team)
    * @param rightPts the score or points of right team gained(In football right team means away team, in NBA left team means home team)
    */
-  function confirmResult(bytes32 gameId, uint leftPts, uint rightPts) gameExist(gameId) confirmationNotEnough(gameId) public {
+  function confirmResult(bytes32 gameId, uint16 leftPts, uint16 rightPts) gameExist(gameId) confirmationNotEnough(gameId) public {
     if (dataCenter[gameId].leftPts == leftPts && dataCenter[gameId].rightPts == rightPts) {
       require(!contains(gameId, msg.sender));
       dataCenter[gameId].confirmAddrs[msg.sender] = true;
       dataCenter[gameId].confirmations += 1;
-      // rewardERC20();
+      require(rewardERC20());
     }
   }
 
@@ -114,7 +114,7 @@ contract DataCenter is Ownable {
   /**
    * @dev distribute reward to participants of auditing game result
    */
-  function rewardERC20() internal {
-    ERC20(token).transfer(msg.sender, CONFIRM_RESULT_BONUS);
+  function rewardERC20() internal returns (bool) {
+    return ERC20(token).transfer(msg.sender, CONFIRM_RESULT_BONUS);
   }
 }
