@@ -113,7 +113,7 @@ contract DataCenter is Ownable {
    * @param rightPts the score or points of right team gained(In football right team means away team, in NBA left team means home team)
    * @param hash indicate the IPFS hash of this game s detail data
    */
-  function modifyData(bytes32 gameId, uint16 leftPts, uint16 rightPts, string hash) onlyOwner gameExist(gameId) public {
+  function modifyResult(bytes32 gameId, uint16 leftPts, uint16 rightPts, string hash) onlyOwner gameExist(gameId) public {
     require(dataCenter[gameId].notMathch >= MAX_CONFIRMATIONS);
     dataCenter[gameId].detailDataHash = hash;
     dataCenter[gameId].leftPts = leftPts;
