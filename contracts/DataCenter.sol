@@ -32,6 +32,12 @@ contract DataCenter is Ownable {
   address token;
   mapping (bytes32 => DataItem) public dataCenter;
 
+  event SaveResult(bytes32 indexed gameId, uint16 leftPts, uint16 rightPts, string hash);
+  event ModifyResult(bytes32 indexed gameId, uint16 leftPts, uint16 rightPts, string hash);
+  event ConfirmResult(address indexed addr, bytes32 indexed gameId);
+  event DenyResult(address indexed addr, bytes32 indexed gameId);
+  event LogReward(address indexed addr, bytes32 indexed gameId, uint value);
+
   /**
    * @dev save game result only be invoked once
    * @param gameId indicate the unique id of game
@@ -78,6 +84,7 @@ contract DataCenter is Ownable {
     dataCenter[gameId].rightPts = rightPts;
     dataCenter[gameId].confirmations = 1;
     dataCenter[gameId].confirmAddrs[msg.sender] = true;
+    SaveResult(gameId, leftPts, rightPts, hash);
   }
 
   /**
@@ -100,10 +107,13 @@ contract DataCenter is Ownable {
     dataCenter[gameId].confirmAddrs[msg.sender] = true;
     if (dataCenter[gameId].leftPts == leftPts && dataCenter[gameId].rightPts == rightPts) {
       dataCenter[gameId].confirmations += 1;
+      ConfirmResult(msg.sender, gameId);
     } else {
       dataCenter[gameId].notMathch += 1;
+      DenyResult(msg.sender, gameId);
     }
-    rewardERC20();
+    require(rewardERC20());
+    LogReward(msg.sender, gameId, CONFIRM_RESULT_BONUS);
   }
 
   /**
@@ -121,6 +131,7 @@ contract DataCenter is Ownable {
     dataCenter[gameId].confirmations = 1;
     dataCenter[gameId].confirmAddrs[msg.sender] = true;
     dataCenter[gameId].notMathch = 0;
+    ModifyResult(gameId, leftPts, rightPts, hash);
   }
  
   /**
