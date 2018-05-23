@@ -25,6 +25,7 @@ contract DataCenter is Ownable {
     uint16 leftPts;
     uint16 rightPts;
     uint8 confirmations;
+    uint8 notMathch;
     mapping (address => bool) confirmAddrs;
   }
 
@@ -94,14 +95,34 @@ contract DataCenter is Ownable {
    * @param rightPts the score or points of right team gained(In football right team means away team, in NBA left team means home team)
    */
   function confirmResult(bytes32 gameId, uint16 leftPts, uint16 rightPts) gameExist(gameId) confirmationNotEnough(gameId) public {
+    require(!contains(gameId, msg.sender));
+    require(dataCenter[gameId].notMathch < MAX_CONFIRMATIONS);
+    dataCenter[gameId].confirmAddrs[msg.sender] = true;
     if (dataCenter[gameId].leftPts == leftPts && dataCenter[gameId].rightPts == rightPts) {
-      require(!contains(gameId, msg.sender));
-      dataCenter[gameId].confirmAddrs[msg.sender] = true;
       dataCenter[gameId].confirmations += 1;
-      require(rewardERC20());
+    } else {
+      dataCenter[gameId].notMathch += 1;
     }
+    rewardERC20();
   }
 
+  /**
+   * @dev allow owner to modify data
+   * @param gameId indicate the unique id of game
+   * @param leftPts the score or points of left team gained(In football left team means home team, in NBA left team means away team)
+   * @param rightPts the score or points of right team gained(In football right team means away team, in NBA left team means home team)
+   * @param hash indicate the IPFS hash of this game s detail data
+   */
+  function modifyData(bytes32 gameId, uint16 leftPts, uint16 rightPts, string hash) onlyOwner gameExist(gameId) public {
+    require(dataCenter[gameId].notMathch >= MAX_CONFIRMATIONS);
+    dataCenter[gameId].detailDataHash = hash;
+    dataCenter[gameId].leftPts = leftPts;
+    dataCenter[gameId].rightPts = rightPts;
+    dataCenter[gameId].confirmations = 1;
+    dataCenter[gameId].confirmAddrs[msg.sender] = true;
+    dataCenter[gameId].notMathch = 0;
+  }
+ 
   /**
    * @dev to check the given address is in the GameItem confirmList
    * @param gameId indicate the unique id of game
