@@ -76,6 +76,11 @@ contract('DataCenter', accounts => {
     assert.equal(isContained2, false, 'new addr should not be containeed')
   })
 
+  it('test confirm a not exist game', async () => {
+    const notExistId = getBytes('not exist game id')
+    await assertRevert(dataCenter.confirmResult(getBytes(notExistId), leftPts, rightPts))
+  })
+
   it('test user1 to confirm a game result', async () => {
     const options = { from: user1 }
     await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts, options)
