@@ -17,6 +17,10 @@ contract('DataCenter', accounts => {
   var user3 = accounts[3]
   var user4 = accounts[4]
   var user5 = accounts[5]
+  var user6 = accounts[6]
+  var user7 = accounts[7]
+  var user8 = accounts[8]
+  var user9 = accounts[9]
 
   let dataCenter
   const gameId = '0012345678'
@@ -87,16 +91,41 @@ contract('DataCenter', accounts => {
     assert.equal(item[4].toNumber(), 3)
   })
 
-  it('test user3 to confirm a game result', async () => {
-    const options = { from: user3 }
-    await dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts, options)
- 
-    const item = await dataCenter.dataCenter(getBytes(gameId))
-    assert.equal(item[4].toNumber(), 4)
+  it('test user2 to confirm a game result again', async () => {
+    const options = { from: user2 }
+    await assertRevert(dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts, options))
   })
 
-  it('test user3 to confirm a game result again', async () => {
-    const options = { from: user3 }
-    await assertRevert(dataCenter.confirmResult(getBytes(gameId), leftPts, rightPts, options))
+  it('test modify data should not be succeed', async () => {
+    await assertRevert(dataCenter.modifyResult(...params))
+  })
+   
+  it('test user deny the result', async () => {
+    await dataCenter.confirmResult(getBytes(gameId), leftPts + 1, rightPts, { from: user3 })
+    await dataCenter.confirmResult(getBytes(gameId), leftPts + 1, rightPts, { from: user4 })
+    await dataCenter.confirmResult(getBytes(gameId), leftPts + 1, rightPts, { from: user5 })
+    await dataCenter.confirmResult(getBytes(gameId), leftPts + 1, rightPts, { from: user6 })
+    await dataCenter.confirmResult(getBytes(gameId), leftPts + 1, rightPts, { from: user7 })
+    await dataCenter.confirmResult(getBytes(gameId), leftPts + 1, rightPts, { from: user8 })
+
+    const item = await dataCenter.dataCenter(getBytes(gameId))
+    assert.equal(item[5].toNumber(), 6)
+  })
+
+  it('test user9 to deny result when [notMatch] is greater than MAX', async () => {
+    const options = { from: user9 }
+    await assertRevert(dataCenter.confirmResult(getBytes(gameId), leftPts + 1, rightPts, options))
+  })
+
+  it('test modify data', async () => {
+    params[1] = params[1] + 1
+    await dataCenter.modifyResult(...params)
+    const item = await dataCenter.dataCenter(getBytes(gameId))
+    assert.equal(getStr(item[0]), gameId)
+    assert.equal(item[1], hash)
+    assert.equal(item[2], leftPts + 1)
+    assert.equal(item[3], rightPts)
+    assert.equal(item[4].toNumber(), 1)
+    assert.equal(item[5].toNumber(), 0)
   })
 })
