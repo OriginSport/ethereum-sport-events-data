@@ -65,12 +65,18 @@ contract DataCenter is Ownable {
     uint16 leftPts;
     uint16 rightPts;
     uint8 confirmations;
-    uint8 notMathch;
+    uint8 notMatch;
     mapping (address => bool) confirmAddrs;
   }
 
-  address token;
+  ERC20 token;
   mapping (bytes32 => DataItem) public dataCenter;
+
+  event SaveResult(bytes32 indexed gameId, uint16 leftPts, uint16 rightPts, string hash);
+  event ModifyResult(bytes32 indexed gameId, uint16 leftPts, uint16 rightPts, string hash);
+  event ConfirmResult(address indexed addr, bytes32 indexed gameId);
+  event DenyResult(address indexed addr, bytes32 indexed gameId);
+  event LogReward(address indexed addr, bytes32 indexed gameId, uint value);
 
   /**
    * @dev save game result only be invoked once
@@ -101,7 +107,7 @@ contract DataCenter is Ownable {
 
   function () public payable {}
   function DataCenter(address tokenAddr) public {
-    token = tokenAddr;
+    token = ERC20(tokenAddr);
   }
 
   /**
@@ -118,6 +124,7 @@ contract DataCenter is Ownable {
     dataCenter[gameId].rightPts = rightPts;
     dataCenter[gameId].confirmations = 1;
     dataCenter[gameId].confirmAddrs[msg.sender] = true;
+    SaveResult(gameId, leftPts, rightPts, hash);
   }
 
   /**
@@ -136,14 +143,17 @@ contract DataCenter is Ownable {
    */
   function confirmResult(bytes32 gameId, uint16 leftPts, uint16 rightPts) gameExist(gameId) confirmationNotEnough(gameId) public {
     require(!contains(gameId, msg.sender));
-    require(dataCenter[gameId].notMathch < MAX_CONFIRMATIONS);
+    require(dataCenter[gameId].notMatch < MAX_CONFIRMATIONS);
     dataCenter[gameId].confirmAddrs[msg.sender] = true;
     if (dataCenter[gameId].leftPts == leftPts && dataCenter[gameId].rightPts == rightPts) {
       dataCenter[gameId].confirmations += 1;
+      ConfirmResult(msg.sender, gameId);
     } else {
-      dataCenter[gameId].notMathch += 1;
+      dataCenter[gameId].notMatch += 1;
+      DenyResult(msg.sender, gameId);
     }
-    rewardERC20();
+    require(rewardERC20());
+    LogReward(msg.sender, gameId, CONFIRM_RESULT_BONUS);
   }
 
   /**
@@ -154,13 +164,14 @@ contract DataCenter is Ownable {
    * @param hash indicate the IPFS hash of this game s detail data
    */
   function modifyResult(bytes32 gameId, uint16 leftPts, uint16 rightPts, string hash) onlyOwner gameExist(gameId) public {
-    require(dataCenter[gameId].notMathch >= MAX_CONFIRMATIONS);
+    require(dataCenter[gameId].notMatch >= MAX_CONFIRMATIONS);
     dataCenter[gameId].detailDataHash = hash;
     dataCenter[gameId].leftPts = leftPts;
     dataCenter[gameId].rightPts = rightPts;
     dataCenter[gameId].confirmations = 1;
     dataCenter[gameId].confirmAddrs[msg.sender] = true;
-    dataCenter[gameId].notMathch = 0;
+    dataCenter[gameId].notMatch = 0;
+    ModifyResult(gameId, leftPts, rightPts, hash);
   }
  
   /**
@@ -176,6 +187,7 @@ contract DataCenter is Ownable {
    * @dev distribute reward to participants of auditing game result
    */
   function rewardERC20() internal returns (bool) {
-    return ERC20(token).transfer(msg.sender, CONFIRM_RESULT_BONUS);
+    require(token.balanceOf(address(this)) >= CONFIRM_RESULT_BONUS);
+    return token.transfer(msg.sender, CONFIRM_RESULT_BONUS);
   }
 }
