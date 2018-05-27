@@ -1,12 +1,12 @@
 const { assertRevert } = require('truffle-js-test-helper')
-const web3 = require('web3')
+const w3 = require('web3')
 const DataCenter = artifacts.require('./DataCenter.sol')
 
 function getStr(hexStr) {
-  return web3.utils.hexToAscii(hexStr).replace(/\u0000/g, '')
+  return w3.utils.hexToAscii(hexStr).replace(/\u0000/g, '')
 }
 function getBytes(str) {
-  return web3.utils.fromAscii(str)
+  return w3.utils.fromAscii(str)
 }
 
 contract('DataCenter', accounts => {
@@ -39,6 +39,11 @@ contract('DataCenter', accounts => {
   })
 
   it('should return a data item', async () => {
+    const addr = dataCenter.address
+    web3.eth.sendTransaction({from: owner, to: addr, value: web3.toWei(90, "ether")}, function(err, data) {
+      console.log(err, data)
+    })
+     
     await dataCenter.saveResult(...params)
     const item = await dataCenter.dataCenter(getBytes(gameId))
     assert.equal(getStr(item[0]), gameId)
@@ -48,7 +53,7 @@ contract('DataCenter', accounts => {
     assert.equal(item[4].toNumber(), 1)
   })
 
-  it('should return a data item using by bet-center', async () => {
+  it('should return a game result using gameId', async () => {
     const item = await dataCenter.getResult(getBytes(gameId))
     assert.equal(item[0], leftPts)
     assert.equal(item[1], rightPts)
