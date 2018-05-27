@@ -2,6 +2,7 @@
 *~
 *site_settings.py
 node_modules
+truffle.js
 
 # Python Ignore
 *.pyc
