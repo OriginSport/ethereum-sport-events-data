@@ -35,7 +35,7 @@ contract DataCenter is Ownable {
   event SaveResult(bytes32 indexed gameId, uint16 leftPts, uint16 rightPts, string hash);
   event ModifyResult(bytes32 indexed gameId, uint16 leftPts, uint16 rightPts, string hash);
   event ConfirmResult(address indexed addr, bytes32 indexed gameId);
-  event DenyResult(address indexed addr, bytes32 indexed gameId);
+  event DenyResult(address indexed addr, bytes32 indexed gameId, uint leftPts, uint rightPts);
   event LogReward(address indexed addr, bytes32 indexed gameId, uint value);
 
   /**
@@ -110,7 +110,7 @@ contract DataCenter is Ownable {
       ConfirmResult(msg.sender, gameId);
     } else {
       dataCenter[gameId].notMatch += 1;
-      DenyResult(msg.sender, gameId);
+      DenyResult(msg.sender, gameId, leftPts, rightPts);
     }
     require(rewardERC20());
     LogReward(msg.sender, gameId, CONFIRM_RESULT_BONUS);
@@ -147,7 +147,7 @@ contract DataCenter is Ownable {
    * @dev distribute reward to participants of auditing game result
    */
   function rewardERC20() internal returns (bool) {
-    require(token.balanceOf(address(this)) >= CONFIRM_RESULT_BONUS);
     return token.transfer(msg.sender, CONFIRM_RESULT_BONUS);
+    //return msg.sender.send(CONFIRM_RESULT_BONUS);
   }
 }
